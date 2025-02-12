@@ -1,35 +1,18 @@
 from game import Game
-
 from chess_board import ChessBoard
+from tile import Tile
+from piece import Piece, Knight
+
+
 def main():
+
     # board = ChessBoard()
     # print(board)
-    # print(board.move((1,4),(2,4), True))
+    # print(board.move((0,3), (7,3), True))
     # print(board)
-    # print(board.move((0,4), (1,4), True))
+    # print(board.move((7,4), (7,3), False))
     # print(board)
-    # print(board.move((6,3), (5,3), False))
-    # print(board)
-    # print(board.white_king_pos)
-    # print(board.black_king_pos)
-    # print(board.print_zone_of_control())
-    # print(board.move((1,4), (2,5), True))
-    # print(board)
-    # print(board.print_zone_of_control())
-    # print(board.move((2,5), (3,6), True))
-    # print(board)
-    # print(board.print_zone_of_control())
-    # game = Game()
-    # game.play()
-    # board = ChessBoard()
-    # print(board)
-    # board.move((0,0), (6,0), True)
-    # print(board)
-    # board.move((6,7), (5,7), False)
-    # print(board)
-    # board.move((6,0), (7,0), True)
-    # print(board)
-    # board.move((7,4), (6,4), False)
-    # print(board.is_valid(False))
+    game = Game()
+    game.play()
 if __name__ == '__main__':
     main()

@@ -4,23 +4,12 @@ class Game:
         self.player = True # White player starts
         self.board = ChessBoard()
         self.turn = 1
-        self.wcheck = False
-        self.bcheck = False
     def play(self):
         #turns will take place for infinite amount of time or will end upon mate or a tie
         while(True):
             print(f"Turn {self.turn}")
-            if self.player:
-                player_text = "White"
-                print(self.board)
-                if self.wcheck:
-                    print("White is in check")
-            else:
-                player_text = "Black"
-                print(self.board.str_black())
-                if self.bcheck:
-                    print("Black is in check")
-            print(f"{player_text} is on the move")
+            print(f"{self.player_text(self.player)} is on the move")
+            print(self.board)
             #player will provide moves until they are correct or he can surrender by typing s
             while(True):
                 proposed_move = input("Provide move: ")
@@ -33,21 +22,18 @@ class Game:
                         break
                 else:
                     print("It's not a valid move notationwise.")
-            self.wcheck = False
-            self.bcheck = False
-            self.player = not self.player
-            if self.player in self.board.check():
-                if self.player:
-                    self.wcheck = True
-                else:
-                    self.bcheck = True
-                if self.board.does_not_have_legal_moves(self.player):
+
+            if self.board.check(not self.player):
+                if self.board.does_not_have_legal_moves(not self.player):
                     print(self.board)
-                    print(f"Checkmate {player_text} won")
+                    print(f"Checkmate {self.player_text(self.player)} won")
                     break
-            elif self.board.does_not_have_legal_moves(self.player):
-                print(f"{player_text} has not left his oponent any legal moves but also has not put him in check - a draw")
+                print(f"{self.player_text(not self.player)} is in check")
+            elif self.board.does_not_have_legal_moves(not self.player):
+                print(f"{self.player_text(self.player)} has not left his oponent any legal moves but also has not put him in check - a draw")
                 break
+            self.player = not self.player
+
             if self.player:
                 self.turn += 1
 
@@ -66,3 +52,8 @@ class Game:
         text = ("moves are input using {letter}{number}{letter}{number} format,\n first is the tile from which move is taking place and after it destination tile\n"
                 "you can also surrender by typing 's'")
         return text
+    def player_text(self, player):
+        if player:
+            return "White"
+        else:
+            return "Black"
