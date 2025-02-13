@@ -80,8 +80,8 @@ class ChessBoard:
         tile = self.tiles[x][y]
         piece = tile.piece
         if piece:
-            moves = piece.list_moves()
-            achievable_tiles = []
+            moves = piece.list_zoc_tiles()
+            controlled_tiles = []
             for move in moves:
                 xinc, yinc = move
                 #coords of piece after move
@@ -91,7 +91,7 @@ class ChessBoard:
                 if newx >= 0 and newy >= 0 and newx < 8 and newy < 8:  # checking for possibility of move taking us outside the board
                     #knight can jump
                     if type(piece) == Knight:
-                        achievable_tiles.append((newx, newy))
+                        controlled_tiles.append((newx, newy))
                     else:
                         supportive_var = True
                         # list of intermediate tiles for checking if there's a piece on the way
@@ -109,9 +109,47 @@ class ChessBoard:
                                 supportive_var = False
                                 break
                         if supportive_var:
+                            controlled_tiles.append((newx, newy))
+            return controlled_tiles
+        #if tile has no piece
+        return []
+    def list_achievable_tiles(self, coords):
+        x, y = coords
+        tile = self.tiles[x][y]
+        piece = tile.piece
+        if piece:
+            moves = piece.list_moves()
+            achievable_tiles = []
+            for move in moves:
+                xinc, yinc = move
+                # coords of piece after move
+                newx = x + xinc
+                newy = y + yinc
+                #
+                if newx >= 0 and newy >= 0 and newx < 8 and newy < 8:  # checking for possibility of move taking us outside the board
+                    # knight can jump
+                    if type(piece) == Knight:
+                        achievable_tiles.append((newx, newy))
+                    else:
+                        supportive_var = True
+                        # list of intermediate tiles for checking if there's a piece on the way
+                        intermediates = []
+                        xsgn = (xinc > 0) - (xinc < 0)
+                        ysgn = (yinc > 0) - (yinc < 0)
+                        # works for horizontal, vertical and diagonal moves
+                        for i in range(1, max(abs(xinc), abs(yinc))):
+                            interx = x + i * xsgn
+                            intery = y + i * ysgn
+                            intermediates.append((interx, intery))
+                        for intermediate in intermediates:
+                            a, b = intermediate
+                            if self.tiles[a][b].piece:
+                                supportive_var = False
+                                break
+                        if supportive_var:
                             achievable_tiles.append((newx, newy))
             return achievable_tiles
-        #if tile has no piece
+        # if tile has no piece
         return []
     #sets up correct zocs for tiles and kings' postitions
     def update_board_info(self):
@@ -158,9 +196,9 @@ class ChessBoard:
         legal_tiles = []
         x, y = coord
         tile_origin = self.tiles[x][y]
-        controlled_tiles = self.list_controlled_tiles(coord)
+        achievable_tiles = self.list_achievable_tiles(coord)
         #legal tiles are subset of controlled tiles
-        for controlled_tile in controlled_tiles:
+        for controlled_tile in achievable_tiles:
             z, w = controlled_tile
             tile_destination = self.tiles[z][w]
             if ((not tile_destination.piece) or (tile_destination.piece.color != player)) and (tile_origin.piece.color == player):
