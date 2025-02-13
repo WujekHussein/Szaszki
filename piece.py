@@ -9,6 +9,9 @@ class Piece(ABC):
     def list_moves(self):
         pass
     @abstractmethod
+    def list_zoc_tiles(self):
+        pass
+    @abstractmethod
     def __str__(self):
         pass
 
@@ -22,6 +25,8 @@ class Pawn(Piece):
         if self.has_moved:
             return [(-(-1)**self.color,0)]
         return [(-(-1)**self.color,0), (-2*(-1)**self.color,0)]
+    def list_zoc_tiles(self):
+        return [(-(-1)**self.color, -1), (-(-1)**self.color, 1)]
 
     def __str__(self):
         return chr(112-32*self.color)
@@ -42,7 +47,8 @@ class Rook(Piece):
             moves.append((0,i))
             moves.append((0,-i))
         return moves
-
+    def list_zoc_tiles(self):
+        return self.list_moves()
     def __str__(self):
         return chr(114-32*self.color)
 
@@ -61,7 +67,8 @@ class Knight(Piece):
                 if abs(i)!=abs(j):
                     moves.append((i,j))
         return moves
-
+    def list_zoc_tiles(self):
+        return self.list_moves()
     def __str__(self):
         return chr(110-32*self.color)
 
@@ -80,6 +87,9 @@ class Bishop(Piece):
             moves.append((i, -i))
             moves.append((-i, -i))
         return moves
+
+    def list_zoc_tiles(self):
+        return self.list_moves()
 
     def __str__(self):
         return chr(98-32*self.color)
@@ -104,6 +114,9 @@ class Queen(Piece):
             moves.append((-i, -i))
         return moves
 
+    def list_zoc_tiles(self):
+        return self.list_moves()
+
     def __str__(self):
         return chr(113-32*self.color)
 
@@ -120,6 +133,9 @@ class King(Piece):
                 if not (i == 0 and j == 0):
                     moves.append((i, j))
         return moves
+
+    def list_zoc_tiles(self):
+        return self.list_moves()
 
     def __str__(self):
         return chr(107-32*self.color)

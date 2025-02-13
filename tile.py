@@ -4,6 +4,7 @@ class Tile:
         self.piece = piece
         self.in_white_zoc = False
         self.in_black_zoc = False
+        self.en_passant = False
     def __str__(self):
         if self.piece:
             return self.piece.__str__()

@@ -4,6 +4,7 @@ class Game:
         self.player = True # White player starts
         self.board = ChessBoard()
         self.turn = 1
+        self.castling_strings = ['e1g1', 'e1c1', 'e8g8', 'e8c8']
     def play(self):
         #turns will take place for infinite amount of time or will end upon mate or a tie
         while(True):
@@ -13,15 +14,27 @@ class Game:
             #player will provide moves until they are correct or he can surrender by typing s
             while(True):
                 proposed_move = input("Provide move: ")
-                move = self.string_to_pair_of_pairs(proposed_move)
-                if move!=0:
-                    origin, destination = move
-                    if not (self.board.move(origin, destination, self.player)):
-                        print("It's not a legal move")
-                    else:
-                        break
+                #separate logic for castling
+                if proposed_move in self.castling_strings:
+                    #trying to castle someone else's pieces
+                   if (self.player and proposed_move[2]=='8') or (not self.player and proposed_move[2]=='1'):
+                       print("It's not a legal move")
+                   else:
+                       long = (proposed_move[2]=='c')
+                       if self.board.castle(long, self.player):
+                           break
+                       else:
+                           print("It's not a legal move")
                 else:
-                    print("It's not a valid move notationwise.")
+                    move = self.string_to_pair_of_pairs(proposed_move)
+                    if move!=0:
+                        origin, destination = move
+                        if not (self.board.move(origin, destination, self.player)):
+                            print("It's not a legal move")
+                        else:
+                            break
+                    else:
+                        print("It's not a valid move notationwise.")
 
             if self.board.check(not self.player):
                 if self.board.does_not_have_legal_moves(not self.player):

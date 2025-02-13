@@ -223,10 +223,53 @@ class ChessBoard:
                     legal_moves = self.list_legal_tiles((i, j), player)
                     if legal_moves:
                         return False
-
-
         return True
-    # #checks whether there's a tie or not
+    #function assumes player is castling his own pieces
+    def castle(self, long, player):
+        kocol = 4
+        if player:
+            row = 0
+        else:
+            row = 7
+        if long:
+            rcol = 0
+            kdcol = 2
+            rdcol=3
+        else:
+            rcol = 7
+            kdcol = 6
+            rdcol = 5
+        king_tile = self.tiles[row][kocol]
+        king = king_tile.piece
+        rook = self.tiles[row][rcol].piece
+        dest_tile = self.tiles[row][kdcol]
+        #sanity check
+        if rook.has_moved or king.has_moved:
+            return False
+        rightwards = kdcol-kocol > 0
+        oneorminusone = -1 + 2*rightwards
+        #checking for free passage
+        for i in range(kocol, kdcol+oneorminusone, oneorminusone):
+            if (i!=kocol and self.tiles[row][i].piece):
+                return False
+            if player:
+                if self.tiles[row][i].in_black_zoc:
+                    return False
+            else:
+                if self.tiles[row][i].in_white_zoc:
+                    return False
+        #checks done
+
+        self.tiles[row][kocol].piece = None
+        king.has_moved = True
+        self.tiles[row][kdcol].piece = king
+        self.tiles[row][rcol].piece = None
+        rook.has_moved = True
+        self.tiles[row][rdcol].piece = rook
+        self.update_board_info()
+        return True
+
+
 
 
 
