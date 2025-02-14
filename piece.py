@@ -1,143 +1,183 @@
 from abc import ABC, abstractmethod
 class Piece(ABC):
     @abstractmethod
-    def __init__(self, color):
-        self.color = color
+    def __init__(self, player):
+        #white=false, black=true
+        self.player = player
         self.has_moved = False
-    #returns list of possible changes in position
+        self.ttl = -1
+    #returns relative position of piece that should be taken of the board upon capture (is not always (0,0) because of en passant mechanism)
+
     @abstractmethod
-    def list_moves(self):
+    def destruction_vector(self):
         pass
+
+    #returns list of vectors pointing to tiles that may be controlled by our piece
     @abstractmethod
-    def list_zoc_tiles(self):
+    def possibly_controlled_tiles(self):
         pass
+
+    @abstractmethod
+    def __str__(self):
+        pass
+    def update_ttl(self):
+        self.ttl -= 1
+
+
+
+class SupportivePiece(Piece):
+    def __init__(self, player):
+        super().__init__(player)
+        #will go through zero
+        self.ttl=1
+
+    def destruction_vector(self):
+        return ((-1)**self.player, 0)
+
+    def possibly_controlled_tiles(self):
+        return []
+
+    def __str__(self):
+        return " "
+
+
+
+class MovingPiece(Piece, ABC):  
+    def __init__(self, player):
+        super().__init__(player)
+
+    def destruction_vector(self):
+        return (0,0)
+
+    @abstractmethod
+    def possibly_controlled_tiles(self):
+        pass
+
     @abstractmethod
     def __str__(self):
         pass
 
 
 
-class Pawn(Piece):
-    def __init__(self, color):
-        super().__init__(color)
-
-    def list_moves(self):
-        if self.has_moved:
-            return [(-(-1)**self.color,0)]
-        return [(-(-1)**self.color,0), (-2*(-1)**self.color,0)]
-    def list_zoc_tiles(self):
-        return [(-(-1)**self.color, -1), (-(-1)**self.color, 1)]
+class Pawn(MovingPiece):
+    def __init__(self, player):
+        super().__init__(player)
 
     def __str__(self):
-        return chr(112-32*self.color)
+        return chr(80+32*self.player)
+
+    def possibly_controlled_tiles(self):
+        return [((-1)**self.player,-1), ((-1)**self.player,1)]
 
 
 
-class Rook(Piece):
-    def __init__(self, color):
-        super().__init__(color)
+class Rook(MovingPiece):
+    def __init__(self, player):
+        super().__init__(player)
+
+    def __str__(self):
+        return chr(82+32*self.player)
 
     # 4 dirs max displacement is 7
-    def list_moves(self):
-
-        moves = []
+    def possibly_controlled_tiles(self):
+        tiles = []
         for i in range(1,8):
-            moves.append((i,0))
-            moves.append((-i,0))
-            moves.append((0,i))
-            moves.append((0,-i))
-        return moves
-    def list_zoc_tiles(self):
-        return self.list_moves()
+            tiles.append((i,0))
+            tiles.append((-i,0))
+            tiles.append((0,i))
+            tiles.append((0,-i))
+        return tiles
+
+
+
+
+class Knight(MovingPiece):
+    def __init__(self, player):
+        super().__init__(player)
+
     def __str__(self):
-        return chr(114-32*self.color)
+        return chr(78+32*self.player)
 
-
-
-class Knight(Piece):
-    def __init__(self, color):
-        super().__init__(color)
-
-    def list_moves(self):
-        moves = []
+    def possibly_controlled_tiles(self):
+        tiles = []
         xinc = [-2, -1, 1, 2]
         yinc = [-2, -1, 1, 2]
         for i in xinc:
             for j in yinc:
                 if abs(i)!=abs(j):
-                    moves.append((i,j))
-        return moves
-    def list_zoc_tiles(self):
-        return self.list_moves()
+                    tiles.append((i,j))
+        return tiles
+
+
+
+
+
+class Bishop(MovingPiece):
+    def __init__(self, player):
+        super().__init__(player)
+
     def __str__(self):
-        return chr(110-32*self.color)
-
-
-
-class Bishop(Piece):
-    def __init__(self, color):
-        super().__init__(color)
+        return chr(66 + 32 * self.player)
 
     # similar to rook, this time directions are diagonal
-    def list_moves(self):
-        moves = []
+    def possibly_controlled_tiles(self):
+        tiles = []
         for i in range(1, 8):
-            moves.append((i, i))
-            moves.append((-i, i))
-            moves.append((i, -i))
-            moves.append((-i, -i))
-        return moves
+            tiles.append((i, i))
+            tiles.append((-i, i))
+            tiles.append((i, -i))
+            tiles.append((-i, -i))
+        return tiles
 
-    def list_zoc_tiles(self):
-        return self.list_moves()
+
+
+
+
+
+
+class Queen(MovingPiece):
+    def __init__(self, player):
+        super().__init__( player)
 
     def __str__(self):
-        return chr(98-32*self.color)
-
-
-
-class Queen(Piece):
-    def __init__(self, color):
-        super().__init__( color)
+        return chr(81+32*self.player)
 
     # combining rook and bishop
-    def list_moves(self):
-        moves = []
+    def possibly_controlled_tiles(self):
+        tiles = []
         for i in range(1, 8):
-            moves.append((i, 0))
-            moves.append((-i, 0))
-            moves.append((0, i))
-            moves.append((0, -i))
-            moves.append((i, i))
-            moves.append((-i, i))
-            moves.append((i, -i))
-            moves.append((-i, -i))
-        return moves
+            tiles.append((i, 0))
+            tiles.append((-i, 0))
+            tiles.append((0, i))
+            tiles.append((0, -i))
+            tiles.append((i, i))
+            tiles.append((-i, i))
+            tiles.append((i, -i))
+            tiles.append((-i, -i))
+        return tiles
 
-    def list_zoc_tiles(self):
-        return self.list_moves()
+
+
+
+
+
+class King(MovingPiece):
+    def __init__(self, player):
+        super().__init__(player)
 
     def __str__(self):
-        return chr(113-32*self.color)
+        return chr(75+32*self.player)
 
-
-
-class King(Piece):
-    def __init__(self, color):
-        super().__init__(color)
-
-    def list_moves(self):
-        moves = []
+    def possibly_controlled_tiles(self):
+        tiles = []
         for i in [-1, 0, 1]:
             for j in [-1, 0, 1]:
                 if not (i == 0 and j == 0):
-                    moves.append((i, j))
-        return moves
+                    tiles.append((i, j))
+        return tiles
 
-    def list_zoc_tiles(self):
-        return self.list_moves()
 
-    def __str__(self):
-        return chr(107-32*self.color)
+
+
 
 
