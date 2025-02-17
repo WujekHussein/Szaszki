@@ -1,22 +1,19 @@
-
+from game import Game
 from chess_board import ChessBoard
 
 
 def main():
-    board = ChessBoard()
-    print(board)
-    print(board.move((1,4), (3,4)))
-    print(board)
-    print(board.move((7,6), (5,7)))
-    print(board)
-    print(board.move((3,4), (4,4)))
-    print(board)
-    print(board.move((6,3), (4,3)))
-    print(board)
-    print(board.move((4,4), (5,3)))
-    print(board)
-    print(board.move((6,2), (5,3)))
-    print(board)
-
+    # board = ChessBoard()
+    # print(board)
+    # print(board.move((0,4),(0,2)))
+    # print(board)
+    # print(board.if_castle(False))
+    # print(board.move((7,4), (7,2)))
+    # print(board)
+    # # print(board.move((1,4),(3,4)))
+    # # print(board)
+    # # print(board)
+    game = Game()
+    game.play()
 if __name__ == '__main__':
     main()

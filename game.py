@@ -4,7 +4,6 @@ class Game:
         self.player = True # White player starts
         self.board = ChessBoard()
         self.turn = 1
-        self.castling_strings = ['e1g1', 'e1c1', 'e8g8', 'e8c8']
     def play(self):
         #turns will take place for infinite amount of time or will end upon mate or a tie
         while(True):
@@ -14,38 +13,27 @@ class Game:
             #player will provide moves until they are correct or he can surrender by typing s
             while(True):
                 proposed_move = input("Provide move: ")
-                #separate logic for castling
-                if proposed_move in self.castling_strings:
-                    #trying to castle someone else's pieces
-                   if (self.player and proposed_move[2]=='8') or (not self.player and proposed_move[2]=='1'):
-                       print("It's not a legal move")
-                   else:
-                       long = (proposed_move[2]=='c')
-                       if self.board.castle(long, self.player):
-                           break
-                       else:
-                           print("It's not a legal move")
-                else:
-                    move = self.string_to_pair_of_pairs(proposed_move)
-                    if move!=0:
-                        origin, destination = move
-                        if not (self.board.move(origin, destination, self.player)):
-                            print("It's not a legal move")
-                        else:
-                            break
-                    else:
-                        print("It's not a valid move notationwise.")
 
-            if self.board.check(not self.player):
-                if self.board.does_not_have_legal_moves(not self.player):
-                    print(self.board)
-                    print(f"Checkmate {self.player_text(self.player)} won")
-                    break
-                print(f"{self.player_text(not self.player)} is in check")
-            elif self.board.does_not_have_legal_moves(not self.player):
-                print(f"{self.player_text(self.player)} has not left his oponent any legal moves but also has not put him in check - a draw")
-                break
-            self.player = not self.player
+                move = self.string_to_pair_of_pairs(proposed_move)
+                if move!=0:
+                    origin, destination = move
+                    if not (self.board.move(origin, destination)):
+                        print("It's not a legal move")
+                    else:
+                        break
+                else:
+                    print("It's not a valid move notationwise.")
+
+            # if self.board.check(not self.player):
+            #     if self.board.does_not_have_legal_moves(not self.player):
+            #         print(self.board)
+            #         print(f"Checkmate {self.player_text(self.player)} won")
+            #         break
+            #     print(f"{self.player_text(not self.player)} is in check")
+            # elif self.board.does_not_have_legal_moves(not self.player):
+            #     print(f"{self.player_text(self.player)} has not left his oponent any legal moves but also has not put him in check - a draw")
+            #     break
+            # self.player = not self.player
 
             if self.player:
                 self.turn += 1

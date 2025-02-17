@@ -19,16 +19,16 @@ class ChessBoard:
         tiles[7][7].piece = Rook(True)
 
         #knights
-        tiles[0][1].piece = Knight(False)
-        tiles[0][6].piece = Knight(False)
-        tiles[7][1].piece = Knight(True)
-        tiles[7][6].piece = Knight(True)
+        # tiles[0][1].piece = Knight(False)
+        # tiles[0][6].piece = Knight(False)
+        # tiles[7][1].piece = Knight(True)
+        # tiles[7][6].piece = Knight(True)
 
         #bishops
-        tiles[0][2].piece = Bishop(False)
-        tiles[0][5].piece = Bishop(False)
-        tiles[7][2].piece = Bishop(True)
-        tiles[7][5].piece = Bishop(True)
+        # tiles[0][2].piece = Bishop(False)
+        # tiles[0][5].piece = Bishop(False)
+        # tiles[7][2].piece = Bishop(True)
+        # tiles[7][5].piece = Bishop(True)
 
         #queen
         tiles[0][3].piece = Queen(False)
@@ -268,6 +268,10 @@ class ChessBoard:
             for j in range(8):
                 if self.tiles[i][j].piece and self.tiles[i][j].piece.player == self.player:
                     self.legal_moves[i][j] = self.list_legal_coordinates((i,j))
+
+
+
+
     #checks if proposed castling is possible
     def if_castle(self, short):
         if self.check():
@@ -285,14 +289,18 @@ class ChessBoard:
             return False
         return True
 
+
+
     def apply_castle(self, short):
         xk = self.player*7
         yk=4
         king = self.tiles[xk][yk].piece
+        king.has_moved = True
         yr = short*7
         rook = self.tiles[xk][yr].piece
+        rook.has_moved = True
         newyk = yk - 2*(-1)**short
-        newyr = yk - short
+        newyr = newyk + (-1)**short
         self.tiles[xk][yk].piece = None
         self.tiles[xk][yr].piece = None
         self.tiles[xk][newyk].piece = king
@@ -308,6 +316,18 @@ class ChessBoard:
     # tries to apply proposed move returns True and changes the board accordingly if successful, returns False otherwise
     def move(self, coord_origin, coord_destination):
         #separate logic for castling
+        if self.if_castle(False):
+            if coord_origin == (7*int(self.player), 4) and coord_destination == (7*int(self.player), 2):
+                self.apply_castle(False)
+                self.update_board_info_1()
+                self.update_board_info_2()
+                return True
+        if self.if_castle(True):
+            if coord_origin == (7*int(self.player), 4) and coord_destination == (7*int(self.player), 6):
+                self.apply_castle(True)
+                self.update_board_info_1()
+                self.update_board_info_2()
+                return True
         x, y = coord_origin
         if coord_destination in self.legal_moves[x][y]:
             self.apply_move(coord_origin, coord_destination)
