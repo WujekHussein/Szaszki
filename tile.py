@@ -27,4 +27,8 @@ class Tile:
                 return True
             return False
         return False
+    def destruction_vector(self):
+        if  not self.piece:
+            return (0,0)
+        return self.piece.destruction_vector()
 

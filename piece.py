@@ -29,7 +29,7 @@ class SupportivePiece(Piece):
     def __init__(self, player):
         super().__init__(player)
         #will go through zero
-        self.ttl=1
+        self.ttl=2
 
     def destruction_vector(self):
         return ((-1)**self.player, 0)

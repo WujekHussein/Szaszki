@@ -4,7 +4,7 @@ from piece import Piece, Pawn, Rook, Knight, Bishop, Queen, King, SupportivePiec
 import copy
 class ChessBoard:
     def __init__(self):
-        self.player = False
+        self.player = True
         self.legal_moves = [[[] for i in range(8)] for j in range(8)]
         tiles = [[Tile((i, j), None) for j in range(8)] for i in range(8)]
         #PAWNS
@@ -37,11 +37,11 @@ class ChessBoard:
         #king
         tiles[0][4].piece = King(False)
         tiles[7][4].piece = King(True)
-        tiles[2][1].piece = Knight(True)
 
         self.tiles = tiles
         self.kings_positions = [(0,4), (7,4)]
-        self.update_board_info()
+        self.update_board_info_1()
+        self.update_board_info_2()
 
 
 
@@ -82,13 +82,20 @@ class ChessBoard:
 
 
 
-    #tries to apply proposed move returns True and changes the board accordingly if successful, returns False otherwise
-    def move(self, origin_coord, destination_coord):
-        if self.is_move_legal(origin_coord, destination_coord):
-            self.change_position(origin_coord, destination_coord)
-            #Update_board_info_tu będzie wywołane
-            return True
-        return False
+    def change_position_pawn(self, origin_coord, destination_coord):
+        x, y = origin_coord
+        z, w = destination_coord
+        moved_piece = self.tiles[x][y].piece
+        moved_piece.has_moved = True
+        ## adding virtual pawn if it is double move
+        if y == w and abs(x-z)==2:
+            self.tiles[int((x+z)/2)][y].piece = SupportivePiece(moved_piece.player)
+        xdestr, ydestr = self.tiles[z][w].destruction_vector()
+        #removing virtual (or any other piece or not piece to be exact) pawn upon capture
+        self.tiles[xdestr+z][ydestr+w].piece = None
+        self.tiles[x][y].piece = None
+        self.tiles[z][w].piece = moved_piece
+
 
 
     #omits origin coord and destination coord works only for vertical horizontal and strictly diagonal lines
@@ -125,7 +132,7 @@ class ChessBoard:
                 if newx>=0 and newx<8 and newy>=0 and newy<8:
                     possibly_controlled.append((newx, newy))
         return possibly_controlled
-
+    #extends function above with shadowing mechanism
     def list_controlled_coordinates(self, origin_coord):
         controlled = []
         possibly_controlled = self.list_possibly_controlled_coordinates(origin_coord)
@@ -163,8 +170,8 @@ class ChessBoard:
                         tile.zocs[player] = True
 
 
-
-    def update_board_info(self):
+    #without player and legal moves
+    def update_board_info_1(self):
         self.update_zoc()
         self.update_ttl_and_possibly_remove()
         self.update_kings_positions()
@@ -189,6 +196,8 @@ class ChessBoard:
                 piece = self.tiles[i][j].piece
                 if type(piece) == King:
                     self.kings_positions[piece.player] = (i,j)
+
+
     # checks if the player on the move is in check
     def check(self):
         king_pos = self.kings_positions[self.player]
@@ -198,7 +207,7 @@ class ChessBoard:
             return True
         return False
 
-
+    #extends controlled coordinates by not allowing entering controlled tile with our own piece and separate logic for pawn
     def list_accessible_coordinates(self, origin_coord):
         x, y = origin_coord
         piece = self.tiles[x][y].piece
@@ -228,285 +237,86 @@ class ChessBoard:
                 accessible.append((forward_x,y))
         return accessible
 
+    #deals with dual logic for pawn doesn't need to check for existance of piece at origin_coord
+    def apply_move(self, origin_coord, destination_coord):
+        x, y = origin_coord
+        if type(self.tiles[x][y].piece) == Pawn:
+            self.change_position_pawn(origin_coord, destination_coord)
+        else:
+            self.change_position(origin_coord, destination_coord)
 
 
-    # def print_zone_of_control(self):
-    #     letter_line = "    A   B   C   D   E   F   G   H    \n"
-    #     sep_line = "  +---+---+---+---+---+---+---+---+  \n"
-    #     disp = ""  # this variable will be appended until done
-    #     disp = letter_line + disp
-    #     disp = sep_line + disp
-    #     for i in range(8):
-    #         row = sep_line
-    #         row += f"{i + 1}"
-    #         for j in range(8):
-    #             row += " | "
-    #             zoc = self.tiles[i][j].zocs
-    #             if zoc == [True, True]:
-    #                 zoc_char = "3"
-    #             elif zoc == [False, True]:
-    #                 zoc_char = "2"
-    #             elif zoc == [True, False]:
-    #                 zoc_char = "1"
-    #             else:
-    #                 zoc_char = "0"
-    #             row += zoc_char
-    #         suffix = f" | {i + 1}\n"
-    #         row += suffix
-    #         disp = row + disp
-    #     disp = letter_line + disp
-    #     return disp
+    ##extends above function byt checking whether position after applying proposed move is valid
+    def list_legal_coordinates(self, origin_coord):
+        x, y = origin_coord
+        if not self.tiles[x][y].piece or type (self.tiles[x][y].piece) == SupportivePiece:
+            return []
+        legals = []
+        accessibles = self.list_accessible_coordinates(origin_coord)
+        for accessible in accessibles:
+            board_copy = copy.deepcopy(self)
+            board_copy.apply_move(origin_coord, accessible)
+            board_copy.update_board_info_1()
+            if not board_copy.check():
+                legals.append(accessible)
+        return legals
 
-    # def str_black(self):
-    #     letter_line = "    H   G   F   E   D   C   B   A    \n"
-    #     sep_line = "  +---+---+---+---+---+---+---+---+  \n"
-    #     disp = ""  # this variable will be appended until done
-    #     disp = letter_line + disp
-    #     disp = sep_line + disp
-    #     for i in range(8):
-    #         row=sep_line
-    #         row+=f"{8-i}"
-    #         for j in range(8):
-    #             row+=" | "
-    #             row+= str(self.tiles[7-i][7-j])
-    #         suffix = f" | {8-i}\n"
-    #         row+=suffix
-    #         disp = row + disp
-    #     disp = letter_line + disp
-    #     return disp
 
-    # used in both update_zone_of_control and move functions, doesn't take checking mechanism  and piece overlap into account  (so it can be used in calculating zoc), but does take into account piece shadowing separate logic will need to be implemented for Pawn
-    # def list_controlled_tiles(self, coords):
-    #     x, y = coords
-    #     tile = self.tiles[x][y]
-    #     piece = tile.piece
-    #     if piece:
-    #         moves = piece.list_zoc_tiles()
-    #         controlled_tiles = []
-    #         for move in moves:
-    #             xinc, yinc = move
-    #             #coords of piece after move
-    #             newx = x + xinc
-    #             newy = y + yinc
-    #             #
-    #             if newx >= 0 and newy >= 0 and newx < 8 and newy < 8:  # checking for possibility of move taking us outside the board
-    #                 #knight can jump
-    #                 if type(piece) == Knight:
-    #                     controlled_tiles.append((newx, newy))
-    #                 else:
-    #                     supportive_var = True
-    #                     # list of intermediate tiles for checking if there's a piece on the way
-    #                     intermediates = []
-    #                     xsgn = (xinc > 0 ) - (xinc < 0)
-    #                     ysgn = (yinc > 0 ) - (yinc < 0)
-    #                     #works for horizontal, vertical and diagonal moves
-    #                     for i in range(1, max(abs(xinc), abs(yinc))):
-    #                         interx = x + i*xsgn
-    #                         intery = y + i*ysgn
-    #                         intermediates.append((interx, intery))
-    #                     for intermediate in intermediates:
-    #                         a, b = intermediate
-    #                         if self.tiles[a][b].piece:
-    #                             supportive_var = False
-    #                             break
-    #                     if supportive_var:
-    #                         controlled_tiles.append((newx, newy))
-    #         return controlled_tiles
-    #     #if tile has no piece
-    #     return []
-    # def list_achievable_tiles(self, coords):
-    #     x, y = coords
-    #     tile = self.tiles[x][y]
-    #     piece = tile.piece
-    #     if piece:
-    #         moves = piece.list_moves()
-    #         achievable_tiles = []
-    #         for move in moves:
-    #             xinc, yinc = move
-    #             # coords of piece after move
-    #             newx = x + xinc
-    #             newy = y + yinc
-    #             #
-    #             if newx >= 0 and newy >= 0 and newx < 8 and newy < 8:  # checking for possibility of move taking us outside the board
-    #                 # knight can jump
-    #                 if type(piece) == Knight:
-    #                     achievable_tiles.append((newx, newy))
-    #                 else:
-    #                     supportive_var = True
-    #                     # list of intermediate tiles for checking if there's a piece on the way
-    #                     intermediates = []
-    #                     xsgn = (xinc > 0) - (xinc < 0)
-    #                     ysgn = (yinc > 0) - (yinc < 0)
-    #                     # works for horizontal, vertical and diagonal moves
-    #                     for i in range(1, max(abs(xinc), abs(yinc))):
-    #                         interx = x + i * xsgn
-    #                         intery = y + i * ysgn
-    #                         intermediates.append((interx, intery))
-    #                     for intermediate in intermediates:
-    #                         a, b = intermediate
-    #                         if self.tiles[a][b].piece:
-    #                             supportive_var = False
-    #                             break
-    #                     if supportive_var:
-    #                         achievable_tiles.append((newx, newy))
-    #         return achievable_tiles
-    #     # if tile has no piece
-    #     return []
-    # #sets up correct zocs for tiles and kings' postitions
-    # def update_board_info(self):
-    #     #clearing up old zones
-    #     for i in range(8):
-    #         for j in range(8):
-    #             self.tiles[i][j].in_white_zoc = False
-    #             self.tiles[i][j].in_black_zoc = False
-    #     for i in range(8):
-    #         for j in range(8):
-    #             controlled_tiles = self.list_controlled_tiles((i, j))
-    #             if self.tiles[i][j].piece:
-    #                 color = self.tiles[i][j].piece.color
-    #             for controlled_tile in controlled_tiles:
-    #                 x, y = controlled_tile
-    #                 if color:
-    #                     self.tiles[x][y].in_white_zoc = True
-    #                 else:
-    #                     self.tiles[x][y].in_black_zoc = True
-    #             if type(self.tiles[i][j].piece) == King:
-    #                 if color:
-    #                     self.white_king_pos = (i, j)
-    #                 else:
-    #                     self.black_king_pos = (i, j)
-    # #checks whether provided player is in check
-    # def check(self, player):
-    #     if player:
-    #         x,y = self.white_king_pos
-    #         if self.tiles[x][y].in_black_zoc:
-    #             return True
-    #         return False
-    #     else:
-    #         x,y = self.black_king_pos
-    #         if self.tiles[x][y].in_white_zoc:
-    #             return True
-    #         return False
-    # #cheks whether board position with provided player on move is valid
-    # def is_valid(self, player):
-    #     if self.check(not player):
-    #         return False
-    #     return True
-    #
-    # def list_legal_tiles(self, coord, player):
-    #     legal_tiles = []
-    #     x, y = coord
-    #     tile_origin = self.tiles[x][y]
-    #     achievable_tiles = self.list_achievable_tiles(coord)
-    #     #legal tiles are subset of controlled tiles
-    #     for controlled_tile in achievable_tiles:
-    #         z, w = controlled_tile
-    #         tile_destination = self.tiles[z][w]
-    #         if ((not tile_destination.piece) or (tile_destination.piece.color != player)) and (tile_origin.piece.color == player):
-    #             board_copy = copy.deepcopy(self)
-    #             piece = board_copy.tiles[x][y].piece
-    #             board_copy.tiles[x][y].piece = None
-    #             piece.has_moved = True
-    #             board_copy.tiles[z][w].piece = piece
-    #             board_copy.update_board_info()
-    #             if board_copy.is_valid(not player):
-    #                 legal_tiles.append((z, w))
-    #     return legal_tiles
-    #
-    #
-    #
-    # # applies proposed move if possible
-    # def move(self, coordStart, coordEnd, player):
-    #     x, y = coordStart
-    #     legal_tiles = self.list_legal_tiles(coordStart, player)
-    #     if coordEnd in legal_tiles:
-    #         z, w = coordEnd
-    #         moved_piece = self.tiles[x][y].piece
-    #         self.tiles[x][y].piece = None
-    #         moved_piece.has_moved = True
-    #         self.tiles[z][w].piece = moved_piece
-    #         self.update_board_info()
-    #         return True
-    #     return False
-    # # def print_zone_of_control(self):
-    # #     letter_line = "    A   B   C   D   E   F   G   H    \n"
-    # #     sep_line = "  +---+---+---+---+---+---+---+---+  \n"
-    # #     disp = ""  # this variable will be appended until done
-    # #     disp = letter_line + disp
-    # #     disp = sep_line + disp
-    # #     for i in range(8):
-    # #         row = sep_line
-    # #         row += f"{i + 1}"
-    # #         for j in range(8):
-    # #             row += " | "
-    # #             piece = self.tiles[i][j]
-    # #             if True in piece.zoc and False in piece.zoc:
-    # #                 zoc_char = "3"
-    # #             elif False in piece.zoc:
-    # #                 zoc_char = "2"
-    # #             elif True in piece.zoc:
-    # #                 zoc_char = "1"
-    # #             else:
-    # #                 zoc_char = "0"
-    # #             row += zoc_char
-    # #         suffix = f" | {i + 1}\n"
-    # #         row += suffix
-    # #         disp = row + disp
-    # #     disp = letter_line + disp
-    # #     return disp
-    # #checks whether there are legal moves or not
-    # def does_not_have_legal_moves(self, player):
-    #     for i in range(8):
-    #         for j in range(8):
-    #             if self.tiles[i][j].piece and self.tiles[i][j].piece.color == player:
-    #                 legal_moves = self.list_legal_tiles((i, j), player)
-    #                 if legal_moves:
-    #                     return False
-    #     return True
-    # #function assumes player is castling his own pieces
-    # def castle(self, long, player):
-    #     kocol = 4
-    #     if player:
-    #         row = 0
-    #     else:
-    #         row = 7
-    #     if long:
-    #         rcol = 0
-    #         kdcol = 2
-    #         rdcol=3
-    #     else:
-    #         rcol = 7
-    #         kdcol = 6
-    #         rdcol = 5
-    #     king_tile = self.tiles[row][kocol]
-    #     king = king_tile.piece
-    #     rook = self.tiles[row][rcol].piece
-    #     dest_tile = self.tiles[row][kdcol]
-    #     #sanity check
-    #     if rook.has_moved or king.has_moved:
-    #         return False
-    #     rightwards = kdcol-kocol > 0
-    #     oneorminusone = -1 + 2*rightwards
-    #     #checking for free passage
-    #     for i in range(kocol, kdcol+oneorminusone, oneorminusone):
-    #         if (i!=kocol and self.tiles[row][i].piece):
-    #             return False
-    #         if player:
-    #             if self.tiles[row][i].in_black_zoc:
-    #                 return False
-    #         else:
-    #             if self.tiles[row][i].in_white_zoc:
-    #                 return False
-    #     #checks done
-    #
-    #     self.tiles[row][kocol].piece = None
-    #     king.has_moved = True
-    #     self.tiles[row][kdcol].piece = king
-    #     self.tiles[row][rcol].piece = None
-    #     rook.has_moved = True
-    #     self.tiles[row][rdcol].piece = rook
-    #     self.update_board_info()
-    #     return True
+
+    def update_legal_moves(self):
+        for i in range(8):
+            for j in range(8):
+                if self.tiles[i][j].piece and self.tiles[i][j].piece.player == self.player:
+                    self.legal_moves[i][j] = self.list_legal_coordinates((i,j))
+    #checks if proposed castling is possible
+    def if_castle(self, short):
+        if self.check():
+            return False
+        x, y = self.kings_positions[self.player]
+        if type(self.tiles[x][y].piece) != King or self.tiles[x][y].piece.player != self.player or self.tiles[x][y].piece.has_moved:
+            return False
+        if type(self.tiles[x][short*7].piece) != Rook or self.tiles[x][short*7].piece.player != self.player or self.tiles[x][short*7].piece.has_moved:
+            return False
+        y+= -(-1)**short
+        if self.tiles[x][y].piece or self.tiles[x][y].zocs[not self.player]:
+            return False
+        y+= -(-1)**short
+        if self.tiles[x][y].piece or self.tiles[x][y].zocs[not self.player]:
+            return False
+        return True
+
+    def apply_castle(self, short):
+        xk = self.player*7
+        yk=4
+        king = self.tiles[xk][yk].piece
+        yr = short*7
+        rook = self.tiles[xk][yr].piece
+        newyk = yk - 2*(-1)**short
+        newyr = yk - short
+        self.tiles[xk][yk].piece = None
+        self.tiles[xk][yr].piece = None
+        self.tiles[xk][newyk].piece = king
+        self.tiles[xk][newyr].piece = rook
+
+
+
+    def update_board_info_2(self):
+        self.player = not self.player
+        self.update_legal_moves()
+
+
+    # tries to apply proposed move returns True and changes the board accordingly if successful, returns False otherwise
+    def move(self, coord_origin, coord_destination):
+        #separate logic for castling
+        x, y = coord_origin
+        if coord_destination in self.legal_moves[x][y]:
+            self.apply_move(coord_origin, coord_destination)
+            self.update_board_info_1()
+            self.update_board_info_2()
+            return True
+        return False
+
+
 
 
 
