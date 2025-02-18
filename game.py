@@ -1,7 +1,7 @@
 from chess_board import ChessBoard
 class Game:
     def __init__(self):
-        self.player = True # White player starts
+        self.player = False # White player starts
         self.board = ChessBoard()
         self.turn = 1
     def play(self):
@@ -24,18 +24,18 @@ class Game:
                 else:
                     print("It's not a valid move notationwise.")
 
-            # if self.board.check(not self.player):
-            #     if self.board.does_not_have_legal_moves(not self.player):
-            #         print(self.board)
-            #         print(f"Checkmate {self.player_text(self.player)} won")
-            #         break
-            #     print(f"{self.player_text(not self.player)} is in check")
-            # elif self.board.does_not_have_legal_moves(not self.player):
-            #     print(f"{self.player_text(self.player)} has not left his oponent any legal moves but also has not put him in check - a draw")
-            #     break
-            # self.player = not self.player
+            if self.board.check():
+                if self.board.does_not_have_legal_moves():
+                    print(self.board)
+                    print(f"Checkmate {self.player_text(self.player)} won")
+                    break
+                print(f"{self.player_text(not self.player)} is in check")
+            elif self.board.does_not_have_legal_moves():
+                print(f"{self.player_text(self.player)} has not left {self.player_text(not self.player)} any legal moves but also has not put him in check - a draw")
+                break
+            self.player = not self.player
 
-            if self.player:
+            if not self.player:
                 self.turn += 1
 
     def string_to_pair_of_pairs(self, text):
@@ -55,6 +55,6 @@ class Game:
         return text
     def player_text(self, player):
         if player:
-            return "White"
-        else:
             return "Black"
+        else:
+            return "White"

@@ -19,16 +19,16 @@ class ChessBoard:
         tiles[7][7].piece = Rook(True)
 
         #knights
-        # tiles[0][1].piece = Knight(False)
-        # tiles[0][6].piece = Knight(False)
-        # tiles[7][1].piece = Knight(True)
-        # tiles[7][6].piece = Knight(True)
+        tiles[0][1].piece = Knight(False)
+        tiles[0][6].piece = Knight(False)
+        tiles[7][1].piece = Knight(True)
+        tiles[7][6].piece = Knight(True)
 
         #bishops
-        # tiles[0][2].piece = Bishop(False)
-        # tiles[0][5].piece = Bishop(False)
-        # tiles[7][2].piece = Bishop(True)
-        # tiles[7][5].piece = Bishop(True)
+        tiles[0][2].piece = Bishop(False)
+        tiles[0][5].piece = Bishop(False)
+        tiles[7][2].piece = Bishop(True)
+        tiles[7][5].piece = Bishop(True)
 
         #queen
         tiles[0][3].piece = Queen(False)
@@ -63,6 +63,9 @@ class ChessBoard:
         disp = letter_line + disp
         return disp
 
+    def get_tile(self, coord):
+        x,y = coord
+        return self.tiles[x][y]
 
 
     #checks in a predefined array
@@ -73,19 +76,21 @@ class ChessBoard:
 
     #doesn't care about legality
     def change_position(self, origin_coord, destination_coord):
-        x, y = origin_coord
-        z, w = destination_coord
-        moved_piece = self.tiles[x][y].piece
+        moved_piece = self.get_tile(origin_coord).piece
         moved_piece.has_moved = True
-        self.tiles[x][y].piece = None
-        self.tiles[z][w].piece = moved_piece
+        self.get_tile(origin_coord).piece = None
+        self.get_tile(destination_coord).piece = moved_piece
 
 
-
+    ##
+    ##
+    ## TRUDNA SPRAWA
+    ##
+    ##
     def change_position_pawn(self, origin_coord, destination_coord):
         x, y = origin_coord
         z, w = destination_coord
-        moved_piece = self.tiles[x][y].piece
+        moved_piece = self.get_tile(origin_coord).piece
         moved_piece.has_moved = True
         ## adding virtual pawn if it is double move
         if y == w and abs(x-z)==2:
@@ -122,7 +127,7 @@ class ChessBoard:
     def list_possibly_controlled_coordinates(self, origin_coord):
         possibly_controlled = []
         x, y = origin_coord
-        origin_piece = self.tiles[x][y].piece
+        origin_piece = self.get_tile(origin_coord).piece
         if origin_piece:
             possible_vectors = origin_piece.possibly_controlled_tiles()
             for vector in possible_vectors:
@@ -142,8 +147,7 @@ class ChessBoard:
             no_obstacle_flag = True
             #Knight moves don't have intermediates so it will act as jumping over pieces
             for intermediate in intermediates:
-                x, y = intermediate
-                intemediate_tile = self.tiles[x][y]
+                intemediate_tile = self.get_tile(intermediate)
                 if not (intemediate_tile.is_empty() or intemediate_tile.is_hollow_but_not_empty()):
                     no_obstacle_flag = False
                     break
@@ -160,13 +164,12 @@ class ChessBoard:
                 self.tiles[i][j].zocs = [False, False]
         for i in range(8):
             for j in range(8):
-                controlling_piece = self.tiles[i][j].piece
+                controlling_piece = self.get_tile((i,j)).piece
                 if controlling_piece:
                     player = controlling_piece.player
                     controlled_coords = self.list_controlled_coordinates((i,j))
                     for coord in controlled_coords:
-                        x, y = coord
-                        tile = self.tiles[x][y]
+                        tile = self.get_tile(coord)
                         tile.zocs[player] = True
 
 
@@ -193,7 +196,7 @@ class ChessBoard:
     def update_kings_positions(self):
         for i in range(8):
             for j in range(8):
-                piece = self.tiles[i][j].piece
+                piece = self.get_tile((i,j)).piece
                 if type(piece) == King:
                     self.kings_positions[piece.player] = (i,j)
 
@@ -201,12 +204,16 @@ class ChessBoard:
     # checks if the player on the move is in check
     def check(self):
         king_pos = self.kings_positions[self.player]
-        x, y = king_pos
-        king_tile = self.tiles[x][y]
+        king_tile = self.get_tile(king_pos)
         if king_tile.zocs[not self.player]:
             return True
         return False
-
+    ###
+    ###
+    ###
+    ###CIENSZKI OSZEH
+    ###
+    ###
     #extends controlled coordinates by not allowing entering controlled tile with our own piece and separate logic for pawn
     def list_accessible_coordinates(self, origin_coord):
         x, y = origin_coord
@@ -239,8 +246,7 @@ class ChessBoard:
 
     #deals with dual logic for pawn doesn't need to check for existance of piece at origin_coord
     def apply_move(self, origin_coord, destination_coord):
-        x, y = origin_coord
-        if type(self.tiles[x][y].piece) == Pawn:
+        if type(self.get_tile(origin_coord).piece) == Pawn:
             self.change_position_pawn(origin_coord, destination_coord)
         else:
             self.change_position(origin_coord, destination_coord)
@@ -248,8 +254,7 @@ class ChessBoard:
 
     ##extends above function byt checking whether position after applying proposed move is valid
     def list_legal_coordinates(self, origin_coord):
-        x, y = origin_coord
-        if not self.tiles[x][y].piece or type (self.tiles[x][y].piece) == SupportivePiece:
+        if not self.get_tile(origin_coord).piece or type (self.get_tile(origin_coord).piece) == SupportivePiece or self.get_tile(origin_coord).piece.player != self.player:
             return []
         legals = []
         accessibles = self.list_accessible_coordinates(origin_coord)
@@ -266,7 +271,6 @@ class ChessBoard:
     def update_legal_moves(self):
         for i in range(8):
             for j in range(8):
-                if self.tiles[i][j].piece and self.tiles[i][j].piece.player == self.player:
                     self.legal_moves[i][j] = self.list_legal_coordinates((i,j))
 
 
@@ -313,6 +317,13 @@ class ChessBoard:
         self.update_legal_moves()
 
 
+
+    def does_not_have_legal_moves(self):
+        for i in range(8):
+            for j in range(8):
+                if self.legal_moves[i][j] != []:
+                    return False
+        return True
     # tries to apply proposed move returns True and changes the board accordingly if successful, returns False otherwise
     def move(self, coord_origin, coord_destination):
         #separate logic for castling
