@@ -31,4 +31,8 @@ class Tile:
         if  not self.piece:
             return (0,0)
         return self.piece.destruction_vector()
+    def get_display_info(self):
+        if not self.piece:
+            return (0,0)
+        return self.piece.get_piece_display_info()
 

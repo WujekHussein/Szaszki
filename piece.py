@@ -20,9 +20,12 @@ class Piece(ABC):
     @abstractmethod
     def __str__(self):
         pass
+    @abstractmethod
+    def get_piece_display_info(self):
+        pass
     def update_ttl(self):
         self.ttl -= 1
-
+    
 
 
 class SupportivePiece(Piece):
@@ -39,6 +42,8 @@ class SupportivePiece(Piece):
 
     def __str__(self):
         return " "
+    def get_piece_display_info(self):
+        return (self.player, 0)
 
 
 
@@ -56,7 +61,9 @@ class MovingPiece(Piece, ABC):
     @abstractmethod
     def __str__(self):
         pass
-
+    @abstractmethod
+    def get_piece_display_info(self):
+        pass
 
 
 class Pawn(MovingPiece):
@@ -68,6 +75,8 @@ class Pawn(MovingPiece):
 
     def possibly_controlled_tiles(self):
         return [((-1)**self.player,-1), ((-1)**self.player,1)]
+    def get_piece_display_info(self):
+        return (self.player, 1)
 
 
 
@@ -87,6 +96,8 @@ class Rook(MovingPiece):
             tiles.append((0,i))
             tiles.append((0,-i))
         return tiles
+    def get_piece_display_info(self):
+        return (self.player, 2)
 
 
 
@@ -107,6 +118,8 @@ class Knight(MovingPiece):
                 if abs(i)!=abs(j):
                     tiles.append((i,j))
         return tiles
+    def get_piece_display_info(self):
+        return (self.player, 3)
 
 
 
@@ -128,6 +141,8 @@ class Bishop(MovingPiece):
             tiles.append((i, -i))
             tiles.append((-i, -i))
         return tiles
+    def get_piece_display_info(self):
+        return (self.player, 4)
 
 
 
@@ -155,6 +170,8 @@ class Queen(MovingPiece):
             tiles.append((i, -i))
             tiles.append((-i, -i))
         return tiles
+    def get_piece_display_info(self):
+        return (self.player, 5)
 
 
 
@@ -175,7 +192,8 @@ class King(MovingPiece):
                 if not (i == 0 and j == 0):
                     tiles.append((i, j))
         return tiles
-
+    def get_piece_display_info(self):
+        return (self.player, 6)
 
 
 
