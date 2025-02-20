@@ -347,7 +347,24 @@ class ChessBoard:
             return True
         return False
 
+    def has_legal_moves(self):
+        for i in range(8):
+            for j in range(8):
+                if self.legal_moves[i][j] != []:
+                    print(self.legal_moves[i][j])
+                    return True
+        return False
 
+    def mate(self):
+        if not self.has_legal_moves() and self.check():
+            return True
+        return False
+
+    def draw(self):
+        if not self.has_legal_moves() and not self.check():
+            return True
+        else:
+            return False
 
 
 

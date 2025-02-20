@@ -10,6 +10,8 @@ class Game:
         self.turn = 1
         self.pressed_button = None
         self.input_str =""
+        self.mate = False
+        self.draw = False
     def tileButtonAction(self, button):
         self.input_str = self.input_str + button.__str__()
     def newGameButtonAction(self, button):
@@ -17,6 +19,8 @@ class Game:
         self.turn = 1
         self.player = False
         self.input_str = ""
+        self.mate = False
+        self.draw = False
     def play(self):
 
         ## OKNO
@@ -100,7 +104,10 @@ class Game:
         ng_button.draw(display_surface)
         buttons.append(ng_button)
 
+        player_mark_surf = font.render("Player:", True, "black")
+        player_mark_rect = player_mark_surf.get_rect(center = (13/16*WINDOW_WIDTH, 7/18*WINDOW_HEIGHT))
 
+        CHECK = False
         #will be checked for having correct length
         while (running):
             for event in pygame.event.get():
@@ -142,6 +149,11 @@ class Game:
                     if self.player:
                         self.turn+=1
                     self.player = not self.player
+                    CHECK = self.board.check()
+                    self.mate = self.board.mate()
+                    self.draw = self.board.draw()
+                    if self.mate:
+                        print("MAT SKURWYSYNU")
                 self.input_str = ""
             elif len(self.input_str) == 2:
                 HIGHLIGHT_POSSIBLE_MOVES = True
@@ -180,10 +192,42 @@ class Game:
 
 
 
+
+
+            #INFO
+            display_surface.blit(player_mark_surf, player_mark_rect.topleft)
+
+            outer_on_the_move_rect = pygame.Rect(0,0, int(1/9*WINDOW_HEIGHT)+10, int(1/9*WINDOW_HEIGHT)+10)
+            outer_on_the_move_rect.center = (15/16*WINDOW_WIDTH, 7/18*WINDOW_HEIGHT)
+            inner_on_the_move_rect = pygame.Rect(0,0, int(1/9*WINDOW_HEIGHT), int(1/9*WINDOW_HEIGHT))
+            inner_on_the_move_rect.center = (15 / 16 * WINDOW_WIDTH, 7 / 18 * WINDOW_HEIGHT)
+            pygame.draw.rect(display_surface, "black", outer_on_the_move_rect)
+            player_color = "black" if self.player else "white"
+            pygame.draw.rect(display_surface, player_color, inner_on_the_move_rect)
+
+            turn_surf = font.render(f"Turn {self.turn}", True, "black")
+            turn_rect = player_mark_surf.get_rect(center=(13 / 16 * WINDOW_WIDTH, 4 / 18 * WINDOW_HEIGHT))
+            display_surface.blit(turn_surf, turn_rect.topleft)
+
+            player_str = "Black" if self.player else "White"
+            not_player_str = "White" if self.player else "Black"
+
+            if CHECK:
+                check_surf = font.render(f"{player_str} is in check", True, "black")
+                check_rect = check_surf.get_rect(center=(14/16*WINDOW_WIDTH, 10/18*WINDOW_HEIGHT))
+                display_surface.blit(check_surf, check_rect.topleft)
+
+            if self.mate or self.draw:
+                text = f"{self.player} has no legal moves\n but is not in check - draw" if self.draw else f"Checkmate - {not_player_str} won"
+                end_info_surf = font.render(text, True, "black")
+                end_info_rect = end_info_surf.get_rect(center=(WINDOW_WIDTH/2,WINDOW_HEIGHT/2))
+                outer_bg_rect = end_info_rect.inflate(60,60)
+                bg_rect = end_info_rect.inflate(50, 50)
+                pygame.draw.rect(display_surface, "black", outer_bg_rect)
+                pygame.draw.rect(display_surface, "white", bg_rect)
+                display_surface.blit(end_info_surf, end_info_rect.topleft)
+
             pygame.display.update()
-
-
-
     pygame.quit()
 
         #turns will take place for infinite amount of time or will end upon mate or a tie
