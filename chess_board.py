@@ -351,7 +351,6 @@ class ChessBoard:
         for i in range(8):
             for j in range(8):
                 if self.legal_moves[i][j] != []:
-                    print(self.legal_moves[i][j])
                     return True
         return False
 

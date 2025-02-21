@@ -56,6 +56,9 @@ class Game:
                 if piece_surfaces[i][j]:
                     piece_surfaces[i][j] = pygame.transform.scale(piece_surfaces[i][j], (TILE_SIZE, TILE_SIZE))
 
+        #possible tile surface
+        red_circle = pygame.image.load(join('images', 'other', 'Red-Circle-Transparent.png'))
+        red_circle = pygame.transform.scale(red_circle, (TILE_SIZE*0.75, TILE_SIZE*0.75))
 
         BOARD_COARDX = 5 / 16 * WINDOW_WIDTH
         BOARD_COARDY = 1 / 6 * WINDOW_HEIGHT
@@ -110,16 +113,24 @@ class Game:
         CHECK = False
         #will be checked for having correct length
         while (running):
+        #Setting_up activity
+            for button in buttons:
+                if type(button) == TileButton:
+                    x, y = button.board_coords
+                    if self.board.legal_moves[x][y]:
+                        button.is_active = True
+                    else:
+                        button.is_active = False
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 for button in buttons:
-                    if button.check_pushdown(event):
+                    if button.check_pushdown(event) and button.is_active:
                         self.pressed_button = button
                     if button.check_release(event):
                         if button == self.pressed_button:
                             button.act()
-                            print(self.input_str)
                         else:
                             self.pressed_button = None
                 # elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -155,8 +166,6 @@ class Game:
                     if self.mate:
                         print("MAT SKURWYSYNU")
                 self.input_str = ""
-            elif len(self.input_str) == 2:
-                HIGHLIGHT_POSSIBLE_MOVES = True
 
 
 
@@ -165,9 +174,11 @@ class Game:
 
             for button in buttons:
                 button.draw(display_surface)
+
+            #CURSOR STYLE CHANGE
             hovering = False
             for button in buttons:
-                if button.is_hovered() and button.is_active():
+                if button.is_hovered() and button.is_active:
                     hovering = True
                     break
             if hovering:
@@ -190,13 +201,15 @@ class Game:
                     if display_piece != 0:
                         display_surface.blit(piece_surfaces[display_color][display_piece], (tile_coords_x, tile_coords_y))
 
-
+            if len(self.input_str) == 2:
+                self.highlight_possible_moves(display_surface, red_circle)
 
 
 
             #INFO
-            display_surface.blit(player_mark_surf, player_mark_rect.topleft)
 
+            #player on the move
+            display_surface.blit(player_mark_surf, player_mark_rect.topleft)
             outer_on_the_move_rect = pygame.Rect(0,0, int(1/9*WINDOW_HEIGHT)+10, int(1/9*WINDOW_HEIGHT)+10)
             outer_on_the_move_rect.center = (15/16*WINDOW_WIDTH, 7/18*WINDOW_HEIGHT)
             inner_on_the_move_rect = pygame.Rect(0,0, int(1/9*WINDOW_HEIGHT), int(1/9*WINDOW_HEIGHT))
@@ -205,6 +218,7 @@ class Game:
             player_color = "black" if self.player else "white"
             pygame.draw.rect(display_surface, player_color, inner_on_the_move_rect)
 
+            #current turn
             turn_surf = font.render(f"Turn {self.turn}", True, "black")
             turn_rect = player_mark_surf.get_rect(center=(13 / 16 * WINDOW_WIDTH, 4 / 18 * WINDOW_HEIGHT))
             display_surface.blit(turn_surf, turn_rect.topleft)
@@ -212,13 +226,15 @@ class Game:
             player_str = "Black" if self.player else "White"
             not_player_str = "White" if self.player else "Black"
 
+            #check
             if CHECK:
                 check_surf = font.render(f"{player_str} is in check", True, "black")
                 check_rect = check_surf.get_rect(center=(14/16*WINDOW_WIDTH, 10/18*WINDOW_HEIGHT))
                 display_surface.blit(check_surf, check_rect.topleft)
 
+            #mate and draw announcements
             if self.mate or self.draw:
-                text = f"{self.player} has no legal moves\n but is not in check - draw" if self.draw else f"Checkmate - {not_player_str} won"
+                text = f"{player_str} has no legal moves\n but is not in check - draw" if self.draw else f"Checkmate - {not_player_str} won"
                 end_info_surf = font.render(text, True, "black")
                 end_info_rect = end_info_surf.get_rect(center=(WINDOW_WIDTH/2,WINDOW_HEIGHT/2))
                 outer_bg_rect = end_info_rect.inflate(60,60)
@@ -283,5 +299,20 @@ class Game:
             return "Black"
         else:
             return "White"
-    def chessboard_coord_to_window_coords(self, i, j):
-        pass
+
+    def board_coords_to_display_coords(self, x, y, width, height):
+        return (5/16*width + 1/12*height*(y+1/2), 1/6*height + 1/12*height*(7-x+1/2))
+    def highlight_possible_moves(self, display, marking):
+        if len(self.input_str) == 2:
+            y = ord(self.input_str[0])-97
+            x = ord(self.input_str[1])-49
+            possible_moves = self.board.legal_moves[x][y]
+            if not possible_moves:
+                return False
+            width, height = display.get_size()
+            for move in possible_moves:
+                z, w = move
+                display_coords = self.board_coords_to_display_coords(z, w, width, height)
+                display.blit(marking, marking.get_rect(center=display_coords))
+        return True
+

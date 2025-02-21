@@ -13,6 +13,7 @@ class Button:
         self.border_color = border_color
         self.border_width = border_width
         self.action = action
+        self.is_active = True
 
 
     def draw(self, surface):
@@ -35,8 +36,6 @@ class Button:
     def check_release(self, event):
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             return self.rect.collidepoint(event.pos)
-    def is_active(self):
-        return True
     def act(self):
         if self.action:
             self.action(self)
@@ -56,8 +55,6 @@ class TileButton(Button):
         # Draw text
         surface.blit(self.text, self.text_rect)
 
-    def is_active(self):
-        return True
     def __str__(self):
         x, y = self.board_coords
         return chr(y+97)+chr(x+49)
