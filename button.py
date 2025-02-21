@@ -46,6 +46,7 @@ class TileButton(Button):
     def __init__(self, x, y, width, height, text, font, action, board_coords, border_width=3, color = "white", text_color = "black",  border_color="black"):
         super().__init__(x, y, width, height, text, font, action, border_width, color, text_color,  border_color)
         self.board_coords = board_coords
+        self.destination_elegible = False
 
     def draw(self, surface):
 

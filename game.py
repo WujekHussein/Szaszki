@@ -12,6 +12,7 @@ class Game:
         self.input_str =""
         self.mate = False
         self.draw = False
+        self.chosen_tile = None
     def tileButtonAction(self, button):
         self.input_str = self.input_str + button.__str__()
     def newGameButtonAction(self, button):
@@ -63,18 +64,23 @@ class Game:
         BOARD_COARDX = 5 / 16 * WINDOW_WIDTH
         BOARD_COARDY = 1 / 6 * WINDOW_HEIGHT
 
-        buttons = []
+        # tile_buttons = []
         markings = []
+        tile_buttons = [[TileButton(BOARD_COARDX + j * TILE_SIZE, BOARD_COARDY + i * TILE_SIZE, TILE_SIZE, TILE_SIZE,
+                                    "", font, self.tileButtonAction, (7 - i, j), 0,
+                                    "beige" if (i + j) % 2 == 0 else (62, 29, 35)) for j in range(8)] for i in range(8)]
         for i in range(8):
-            # TILES
-            for j in range(8):
-                tile_coords_x = BOARD_COARDX + j * TILE_SIZE
-                tile_coords_y = BOARD_COARDY + i * TILE_SIZE
-                ##displaying tile itself
-                tile = TileButton(tile_coords_x, tile_coords_y, TILE_SIZE, TILE_SIZE, "", font, self.tileButtonAction, (7-i, j), 0,
-                                  "beige" if (i + j) % 2 == 0 else (62, 29, 35))
-                tile.draw(display_surface)
-                buttons.append(tile)
+        #     # TILES
+        #         tile_coords_x = BOARD_COARDX + j * TILE_SIZE
+        #         tile_coords_y = BOARD_COARDY + i * TILE_SIZE
+        #         ##displaying tile itself
+        #         tile = TileButton(tile_coords_x, tile_coords_y, TILE_SIZE, TILE_SIZE, "", font, self.tileButtonAction, (7-i, j), 0,
+        #                           "beige" if (i + j) % 2 == 0 else (62, 29, 35))
+        #         tile.draw(display_surface)
+        #         tile_buttons.append(tile)
+
+
+
             # COORDINATE MARKINGS
             # top letters
             text_surface = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
@@ -105,22 +111,39 @@ class Game:
         ng_button = Button(WINDOW_WIDTH // 16, WINDOW_HEIGHT // 6, LEFT_BUTTON_WIDTH, LEFT_BUTTON_HEIGHT, "New Game",
                            font, self.newGameButtonAction, WINDOW_WIDTH // 480)
         ng_button.draw(display_surface)
-        buttons.append(ng_button)
-
+        tile_buttons_list = [tile for row in tile_buttons for tile in row]
+        buttons = tile_buttons_list + [ng_button]
         player_mark_surf = font.render("Player:", True, "black")
         player_mark_rect = player_mark_surf.get_rect(center = (13/16*WINDOW_WIDTH, 7/18*WINDOW_HEIGHT))
-
         CHECK = False
         #will be checked for having correct length
         while (running):
         #Setting_up activity
-            for button in buttons:
-                if type(button) == TileButton:
-                    x, y = button.board_coords
-                    if self.board.legal_moves[x][y]:
-                        button.is_active = True
-                    else:
-                        button.is_active = False
+            if len(self.input_str) == 0:
+                for i in range(8):
+                    for j in range(8):
+                        button = tile_buttons[i][j]
+                        x, y = button.board_coords
+                        if self.board.legal_moves[x][y]:
+                            button.is_active = True
+                        else:
+                            button.is_active = False
+            else:
+                y = ord(self.input_str[0]) - 97
+                x = ord(self.input_str[1]) - 49
+                possible_moves = self.board.legal_moves[x][y]
+                for move in possible_moves:
+                    i, j = move
+                    tile_buttons[7-i][j].is_active = True
+
+            # for i in range(8):
+            #     for j in range(8):
+            #         button = tile_buttons[i][j]
+            #         x, y = button.board_coords
+            #         if  not self.board.legal_moves[x][y] and not button in moveable_onto_tiles :
+            #             button.is_active = False
+            # for tile in moveable_onto_tiles:
+            #     tile.is_active = True
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -170,6 +193,7 @@ class Game:
 
 
 
+
             display_surface.fill('white')
 
             for button in buttons:
@@ -203,6 +227,7 @@ class Game:
 
             if len(self.input_str) == 2:
                 self.highlight_possible_moves(display_surface, red_circle)
+
 
 
 
@@ -246,38 +271,6 @@ class Game:
             pygame.display.update()
     pygame.quit()
 
-        #turns will take place for infinite amount of time or will end upon mate or a tie
-        # while(True):
-        #     print(f"Turn {self.turn}")
-        #     print(f"{self.player_text(self.player)} is on the move")
-        #     print(self.board)
-        #     #player will provide moves until they are correct or he can surrender by typing s
-        #     while(True):
-        #         proposed_move = input("Provide move: ")
-        #
-        #         move = self.string_to_pair_of_pairs(proposed_move)
-        #         if move!=0:
-        #             origin, destination = move
-        #             if not (self.board.move(origin, destination)):
-        #                 print("It's not a legal move")
-        #             else:
-        #                 break
-        #         else:
-        #             print("It's not a valid move notationwise.")
-        #
-        #     if self.board.check():
-        #         if self.board.does_not_have_legal_moves():
-        #             print(self.board)
-        #             print(f"Checkmate {self.player_text(self.player)} won")
-        #             break
-        #         print(f"{self.player_text(not self.player)} is in check")
-        #     elif self.board.does_not_have_legal_moves():
-        #         print(f"{self.player_text(self.player)} has not left {self.player_text(not self.player)} any legal moves but also has not put him in check - a draw")
-        #         break
-        #     self.player = not self.player
-        #
-        #     if not self.player:
-        #         self.turn += 1
 
     def string_to_pair_of_pairs(self, text):
         if (len(text) != 4):
