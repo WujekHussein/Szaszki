@@ -272,11 +272,16 @@ class ChessBoard:
         for i in range(8):
             for j in range(8):
                     self.legal_moves[i][j] = self.list_legal_coordinates((i,j))
+        ##adding potential castling
+        row = self.player*7
+        if self.if_castle(False):
+            self.legal_moves[row][4].append((row, 2))
+        if self.if_castle(True):
+            self.legal_moves[row][4].append((row, 6))
 
 
 
-
-    #checks if proposed castling is possible
+        #checks if proposed castling is possible
     def if_castle(self, short):
         if self.check():
             return False
